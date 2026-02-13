@@ -1,4 +1,3 @@
-# embed.py
 import os
 import json
 import argparse
@@ -78,7 +77,7 @@ def main():
     print(f"Loaded {len(texts)} documents for embedding.")
 
 
-    vectorizer = TfidfVectorizer(stop_words="english", max_features=args.max_features)
+    vectorizer = TfidfVectorizer(stop_words="english", max_features=args.max_features, min_df=5, max_df=0.7)
     X = vectorizer.fit_transform(texts)
 
     max_possible = min(X.shape[0] - 1, X.shape[1] - 1)
