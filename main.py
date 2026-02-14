@@ -1,4 +1,3 @@
-# main.py
 import argparse
 import threading
 import subprocess
@@ -7,7 +6,6 @@ import time
 
 
 def run(cmd: str):
-    """Run a shell command, print it, and raise if failed."""
     print(f"\n[RUN] {cmd}")
     p = subprocess.run(cmd, shell=True)
     if p.returncode != 0:
@@ -31,30 +29,25 @@ def updater_loop(
     while True:
         start = time.time()
         try:
-            # 1) scrape (incremental)
+    
             run(f"python scraper.py {scrape_n} --subs {subs} --sleep {sleep_sec}")
 
-            # 2) preprocess
             run("python preprocess.py")
 
-            # 3) embed (rebuild embeddings for latest window)
             run(
                 f"python embed.py --limit {embed_limit} --dim 128 "
                 f"--model_version {model_version}"
             )
 
-            # 4) cluster from embeddings
             run(
                 f"python cluster_from_embeddings.py --k {k} --limit {cluster_limit} "
                 f"--model_version {model_version}"
             )
 
-            # 5) keywords/topics
             run(
                 f"python keywords.py --model_version {model_version} --k {k} --topn {topn_terms}"
             )
 
-            # 6) visualization
             run(f"python visualize.py --model_version {model_version} --out {pca_out}")
 
             elapsed = time.time() - start
@@ -72,10 +65,8 @@ def updater_loop(
 def main():
     ap = argparse.ArgumentParser()
 
-    # required: interval minutes
     ap.add_argument("interval", type=int, help="update interval in minutes (e.g., 5)")
 
-    # scraping controls
     ap.add_argument("--scrape_n", type=int, default=200, help="how many posts to scrape each cycle")
     ap.add_argument(
         "--subs",
@@ -85,7 +76,6 @@ def main():
     )
     ap.add_argument("--sleep", type=float, default=1.5, help="sleep seconds between page requests")
 
-    # pipeline controls
     ap.add_argument("--model_version", type=str, default="tfidf_svd_v2")
     ap.add_argument("--k", type=int, default=8, help="number of clusters")
     ap.add_argument("--embed_limit", type=int, default=2000, help="max docs to embed each cycle")
@@ -95,7 +85,6 @@ def main():
 
     args = ap.parse_args()
 
-    # start updater thread
     t = threading.Thread(
         target=updater_loop,
         args=(
@@ -142,7 +131,6 @@ def main():
             print(f"PCA image: {args.pca_out}")
             continue
 
-        # query mode: call query.py
         safe_q = q.replace('"', '\\"')
         cmd = (
             f'python query.py "{safe_q}" '
