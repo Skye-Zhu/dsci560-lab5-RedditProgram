@@ -1,12 +1,12 @@
-# preprocess.py
+
 import re
 from db import get_conn
 
 def clean_text(s: str) -> str:
     s = s or ""
-    s = re.sub(r"<[^>]+>", " ", s)          # HTML tags
-    s = re.sub(r"http\S+", " ", s)          # URLs
-    s = re.sub(r"[\r\n\t]+", " ", s)        # whitespace
+    s = re.sub(r"<[^>]+>", " ", s)          
+    s = re.sub(r"http\S+", " ", s)          
+    s = re.sub(r"[\r\n\t]+", " ", s)       
     s = re.sub(r"\s+", " ", s).strip()
     return s
 
@@ -14,7 +14,6 @@ def main(limit=2000):
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
 
-    # 只处理非广告
     cur.execute("""
         SELECT id, title, body
         FROM posts
