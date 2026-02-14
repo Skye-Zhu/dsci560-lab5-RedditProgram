@@ -1,4 +1,3 @@
-# cluster.py
 import argparse
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -38,8 +37,7 @@ def update_cluster_ids(ids, labels):
 
 
 def print_cluster_representatives(texts, titles, labels, centers, X, topn=3):
-    # 对每个 cluster：找离 centroid 最近的 topn 条
-    D = pairwise_distances(X, centers)  # shape: (n_docs, k)
+    D = pairwise_distances(X, centers)  
     k = centers.shape[0]
     for c in range(k):
         idx = np.argsort(D[:, c])[:topn]
