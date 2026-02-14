@@ -18,21 +18,17 @@ def clean_text(s: str) -> str:
     return s
 
 def mask_author(author: str) -> str:
-    # stable-ish mask: keep length but no identity
     if not author:
         return "user_unknown"
     return "user_" + str(abs(hash(author)) % 1000000).zfill(6)
 
 def is_promoted(thing) -> bool:
-    # Old reddit sometimes marks promoted content
-    # Heuristic: look for "promoted" text within the thing
     txt = thing.get_text(" ", strip=True).lower()
     return ("promoted" in txt) or ("advertisement" in txt) or ("sponsored" in txt)
 
 def parse_created_at(thing) -> Optional[datetime]:
     time_tag = thing.select_one("time")
     if time_tag and time_tag.has_attr("datetime"):
-        # e.g. 2026-02-11T07:12:34+00:00
         try:
             dt = dtparser.isoparse(time_tag["datetime"])
             return dt.astimezone(timezone.utc).replace(tzinfo=None)
@@ -41,11 +37,9 @@ def parse_created_at(thing) -> Optional[datetime]:
     return None
 
 def extract_post_id(thing) -> Optional[str]:
-    # thing has data-fullname like t3_xxxxx
     fullname = thing.get("data-fullname")
     if fullname and fullname.startswith("t3_"):
         return fullname[3:]
-    # fallback: from comments link
     a = thing.select_one("a.comments")
     if a and a.has_attr("href"):
         m = re.search(r"/comments/([a-z0-9]+)/", a["href"])
@@ -63,13 +57,7 @@ def extract_post_url(thing) -> Optional[str]:
     return None
 
 def extract_image_url(post_url: str) -> Optional[str]:
-    """
-    Minimal image handling:
-    - If link is direct image: .jpg/.png/.gif/.webp
-    - If i.redd.it or preview.redd.it: keep it
-    Otherwise None.
-    (We’re not downloading binaries here; just storing link.)
-    """
+
     if not post_url:
         return None
     u = post_url.lower()
@@ -93,7 +81,6 @@ def fetch_page(subreddit: str, after: Optional[str]) -> Tuple[str, Optional[str]
     next_a = soup.select_one("span.next-button a")
     next_after = None
     if next_a and next_a.has_attr("href"):
-        # next href contains after=t3_xxx
         m = re.search(r"after=([^&]+)", next_a["href"])
         if m:
             next_after = m.group(1)
@@ -126,7 +113,6 @@ def parse_posts(html: str, subreddit: str) -> List[Dict]:
 
         ad = is_promoted(thing)
 
-        # body/selftext: old reddit listing page usually doesn't include full selftext
         body = ""
 
         posts.append({
@@ -209,7 +195,6 @@ def main():
                 continue
 
             posts = parse_posts(html, sub)
-            # filter ads (still store if you want; here we store but you can drop later)
             saved = upsert_posts(posts)
 
             total_saved += saved
