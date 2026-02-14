@@ -1,4 +1,3 @@
-# cluster_from_embeddings.py
 import json
 import argparse
 import numpy as np
@@ -30,7 +29,6 @@ def load_embeddings(limit: int, model_version: str):
         vectors.append(json.loads(r["vector_json"]))
         titles.append(r.get("title", "") or "")
 
-    # 强制变成规则矩阵（若混维度会在这里立刻报错，便于定位）
     X = np.array(vectors, dtype=float)
     return ids, X, titles
 
@@ -62,8 +60,7 @@ def main():
     labels = kmeans.labels_
     update_cluster_ids(ids, labels)
     print("Cluster IDs updated.")
-
-    # 找 centroid 最近的帖子
+    
     D = pairwise_distances(X, kmeans.cluster_centers_)
     for c in range(args.k):
         idx = np.argsort(D[:, c])[:args.topn]
